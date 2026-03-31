@@ -32,7 +32,10 @@ The suite is organized into logical folders to mimic a real-world production pip
    ```
 
    ## 📊 Automation Report
-(Insert your screenshot here)
+   
+>![Newman Report Summary](https://github.com/thedatafae/tmdb-api-automation-framework/raw/main/reports/summary.png)
 
-Note: All tests passed with 100% success rate, validating data integrity across 15+ assertions.
+> **🔗 [View Interactive HTML Report](https://htmlpreview.github.io/?https://github.com/thedatafae/tmdb-api-automation-framework/blob/main/reports/TMDB_API_Automation_Regression_Report.html)**
+
+> Note: All tests passed with 100% success rate, validating data integrity across 15+ assertions.
 

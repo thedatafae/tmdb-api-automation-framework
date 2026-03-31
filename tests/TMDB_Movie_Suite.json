@@ -1,0 +1,599 @@
+{
+  "info": {
+    "_postman_id": "ebd76214-7f2e-420d-a91b-5f543d292bd6",
+    "name": "TMDB Movie Suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52657583",
+    "_collection_link": "https://go.postman.co/collection/52657583-ebd76214-7f2e-420d-a91b-5f543d292bd6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth & Smoke Test",
+      "item": [
+        {
+          "name": "1: Authentication Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1. Basic HTTP Check\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// 2. Simple Boolean Check\r",
+                  "pm.test(\"API Token is Authorized\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.success).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/authentication",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "authentication"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2: Basic Search - Interstellar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1. Status and Response Time Check \r",
+                  "pm.test(\"Search is functional and fast\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000); // Response should be < 1s\r",
+                  "});\r",
+                  "\r",
+                  "// 2. Data Integrity Check\r",
+                  "pm.test(\"Results found for Interstellar\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.results.length).to.be.above(0);\r",
+                  "    pm.expect(jsonData.results[0].title).to.contain(\"Interstellar\");\r",
+                  "    \r",
+                  "    // 3. Dynamic Chaining \r",
+                  "    var firstId = jsonData.results[0].id;\r",
+                  "    pm.environment.set(\"firstResultId\", firstId);\r",
+                  "    console.log(\"Successfully captured Movie ID: \" + firstId);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/search/movie?query=Interstellar&api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "search",
+                "movie"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Interstellar"
+                },
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Regression Suite",
+      "item": [
+        {
+          "name": "1: Get Movie Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));\r",
+                  "\r",
+                  "pm.test(\"Movie Details are Correct\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    // Verify the title we saved is the one we got\r",
+                  "    pm.expect(jsonData.original_title).to.include(\"Interstellar\");\r",
+                  "    // Verify technical data types \r",
+                  "    pm.expect(jsonData.runtime).to.be.a('number');\r",
+                  "    pm.expect(jsonData.genres).to.be.an('array');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2: Add Rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Rating successfully added\", function () {\r",
+                  "    pm.response.to.have.status(201); // 201 = Created\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.success).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"value\": 9.0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}/rating?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}",
+                "rating"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            },
+            "description": "Rate \"Interstellar\" a 9.0"
+          },
+          "response": []
+        },
+        {
+          "name": "3: Update Rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Rating Updated Successfully\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.success).to.be.true;\r",
+                  "    // TMDB returns status_code 1 for success/update\r",
+                  "    pm.expect(jsonData.status_code).to.eql(1);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"value\": 8.5\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}/rating?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}",
+                "rating"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4: Delete Rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Rating Deleted Successfully\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.success).to.be.true;\r",
+                  "    // TMDB returns status_code 13 when a session's rating is deleted\r",
+                  "    pm.expect(jsonData.status_code).to.eql(13);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}/rating?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}",
+                "rating"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5: Verify Deletion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Verify Rating is truly GONE\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    // In TMDB, if you haven't rated it, 'rated' will be 'false'\r",
+                  "    pm.expect(jsonData.rated).to.be.false;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}/account_states?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}",
+                "account_states"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            },
+            "description": "The Logic: This specific TMDB endpoint tells you if you (the authenticated user) have rated the movie."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Negative Testing",
+      "item": [
+        {
+          "name": "1: Unauthorized Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "    pm.response.to.have.status(401); // 401 = Unauthorized\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Error message is descriptive\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.status_message).to.contain(\"Invalid API key\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}?api_key=WRONG_KEY_123",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "WRONG_KEY_123"
+                }
+              ]
+            },
+            "description": "Try to get movie details but use a Wrong API Key."
+          },
+          "response": []
+        },
+        {
+          "name": "2: Resource Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404); // 404 = Not Found\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/999999999?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "999999999"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            },
+            "description": "Goal: Try to get details for a movie ID that doesn't exist (e.g., 0 or 999999999)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Schema Validation",
+      "item": [
+        {
+          "name": "New Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1. Define The Schema\r",
+                  "const movieSchema = {\r",
+                  "    \"type\": \"object\",\r",
+                  "    \"required\": [\"id\", \"original_title\", \"runtime\", \"genres\"],\r",
+                  "    \"properties\": {\r",
+                  "        \"id\": { \"type\": \"number\" },\r",
+                  "        \"original_title\": { \"type\": \"string\" },\r",
+                  "        \"runtime\": { \"type\": \"number\" },\r",
+                  "        \"genres\": { \r",
+                  "            \"type\": \"array\",\r",
+                  "            \"items\": {\r",
+                  "                \"type\": \"object\",\r",
+                  "                \"properties\": {\r",
+                  "                    \"id\": { \"type\": \"number\" },\r",
+                  "                    \"name\": { \"type\": \"string\" }\r",
+                  "                }\r",
+                  "            }\r",
+                  "        },\r",
+                  "        \"adult\": { \"type\": \"boolean\" }\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "// 2. Perform the Validation\r",
+                  "pm.test(\"Response Schema is Valid\", function () {\r",
+                  "    pm.response.to.have.jsonSchema(movieSchema);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/{{firstResultId}}?api_key={{api_key}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "{{firstResultId}}"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4YzhmZmUyOGUwZmQ1NGVjNzg0MWY1NzQ2OGI5ZDU4NSIsIm5iZiI6MTc3NDk1NjkxMi4xODcsInN1YiI6IjY5Y2JiMTcwMjEzM2Q3YmJjOGFjNGJmNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.XpVoiQYuQTf443a1LPw8zH8qvaj43F8cRe5qREjXezo",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
